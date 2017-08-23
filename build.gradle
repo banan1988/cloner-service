@@ -1,0 +1,54 @@
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "com.netflix.nebula:gradle-ospackage-plugin:4.4.0"
+    }
+}
+
+plugins {
+    id "nebula.ospackage-application" version "4.4.0" apply true
+    id "nebula.ospackage-base" version "4.4.0" apply false
+    id "nebula.ospackage" version "4.4.0" apply false
+
+}
+
+group 'pl.com.b2d'
+version '0.1-SNAPSHOT'
+mainClassName = ''
+
+ospackage {
+    os = LINUX
+    fileMode 0644
+    user 'cloner'
+    permissionGroup 'cloner'
+
+    preInstall file('scripts/preInstall.sh')
+    postInstall file('scripts/postInstall.sh')
+    postUninstall file('scripts/postUninstall.sh')
+
+    from('src/etc/cloner') {
+        into '/etc/cloner'
+        fileType CONFIG | NOREPLACE
+    }
+
+    from('src/usr/local/bin') {
+        into '/usr/local/bin'
+    }
+
+    from('src/usr/share/cloner') {
+        into '/usr/share/cloner'
+    }
+
+    link('/etc/init.d/cloner', '/usr/share/cloner/cloner.sh')
+    link('/etc/init.d/cloner-service', '/usr/share/cloner/cloner-service.sh')
+}
+
+
+buildRpm {
+    arch = NOARCH
+    requires('python', '2.7', GREATER | EQUAL)
+}

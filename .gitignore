@@ -1,0 +1,7 @@
+*.log*
+.idea
+.gradle
+.pyc
+*.pyc
+*.iml
+build

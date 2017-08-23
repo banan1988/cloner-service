@@ -1,0 +1,7 @@
+{
+  "bind_addr": "localhost:8888",
+  "log_level": "INFO",
+  "manager": [
+    "localhost:8080"
+  ]
+}
