@@ -4,6 +4,10 @@ import threading
 
 from command import *
 
+__all__ = ["Cloner"]
+
+__version__ = "0.1"
+
 
 class ClonerThread(threading.Thread):
     def __init__(self, command):
@@ -27,9 +31,9 @@ class ClonerThread(threading.Thread):
 
 
 class Cloner:
-    gor_command = "/home/banan/goreplay --input-raw :8080 --output-http localhost:8081"
-
+    # gor_command = "/home/banan/goreplay --input-raw :8080 --output-http localhost:8081"
     # gor_command = "/usr/local/bin/goreplay"
+    gor_command = "/home/banan/goreplay"
 
     def __init__(self):
         pass
@@ -42,11 +46,11 @@ class Cloner:
     def stop(self):
         self.thread.interrupt()
 
-    def version(self):
+    def version_gor(self):
         result = Command(self.gor_command).execute()
         return result.stdout.strip().split(" ")[1]
 
-    def help(self):
+    def help_gor(self):
         result = Command(" ".join([self.gor_command, "-h"])).execute()
         return result.stderr.strip()
 
@@ -68,11 +72,13 @@ if __name__ == '__main__':
     print(ARGS)
 
     try:
-        cloner = Cloner()
-        version = cloner.version()
-        print(version)
-        help = cloner.help()
-        print(help)
+        if ARGS.version_gor:
+            result = Cloner().version_gor()
+        elif ARGS.help_gor:
+            result = Cloner().help_gor()
+        else:
+            ARGS.configuration_path
+
     except SystemExit:
         print('System exit')
         pass

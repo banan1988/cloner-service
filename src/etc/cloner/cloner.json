@@ -1,3 +1,47 @@
 {
-
+  "input": {
+    "raw": {
+      "engine": "libpcap",
+      "port": 8080,
+      "paths": {
+        "allow": [
+          "/a1",
+          "/a2"
+        ],
+        "disallow": [
+          "/b1",
+          "/b2"
+        ],
+        "rewrite": [
+          "/a1/([a-zA-Z]+):/a2/$1"
+        ]
+      }
+    }
+  },
+  "output": {
+    "http": {
+      "hosts": [
+        {
+          "host": "http://a.host.domain.com:8080",
+          "rate": "66%"
+        },
+        {
+          "host": "http://a.host.domain.com:8080"
+        },
+        {
+          "host": "http://a.host.domain.com:8080"
+        }
+      ],
+      "rate": "100%",
+      "workers": 1
+    }
+  },
+  "exit_after": "30s",
+  "extra_args": {
+    "--key": "value",
+    "--key2": "next_value"
+  },
+  "debug": false,
+  "verbose": false,
+  "stats": false
 }
