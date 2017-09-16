@@ -3,6 +3,9 @@ import argparse
 import threading
 
 from command import *
+from configuration import ClonerConfiguration
+from env import CONFIGURATION_PATH
+from goreplay import GoReplayCommand
 
 __all__ = ["Cloner"]
 
@@ -11,10 +14,9 @@ __version__ = "0.1"
 
 class ClonerThread(threading.Thread):
     def __init__(self, command):
-        super(ClonerThread, self).__init__(
-            name="ClonerThread",
-            daemon=True,
-        )
+        threading.Thread.__init__(self)
+        self.setName("ClonerThread")
+        self.setDaemon(True)
         self.command = command
 
     def run(self):
@@ -31,12 +33,10 @@ class ClonerThread(threading.Thread):
 
 
 class Cloner:
-    # gor_command = "/home/banan/goreplay --input-raw :8080 --output-http localhost:8081"
-    # gor_command = "/usr/local/bin/goreplay"
-    gor_command = "/home/banan/goreplay"
+    thread = None
 
-    def __init__(self):
-        pass
+    def __init__(self, configuration):
+        self.gor_command = GoReplayCommand(configuration).build()
 
     def start(self):
         self.thread = ClonerThread(self.gor_command)
@@ -44,7 +44,8 @@ class Cloner:
         self.thread.join()
 
     def stop(self):
-        self.thread.interrupt()
+        if self.thread:
+            self.thread.interrupt()
 
     def version_gor(self):
         result = Command(self.gor_command).execute()
@@ -63,11 +64,13 @@ def get_args():
     parser.add_argument('--help-gor', action='store_true')
     parser.add_argument('--configuration-path', type=str,
                         required=False,
-                        help='Path to configuration.')
+                        default=CONFIGURATION_PATH,
+                        help='Path to cloner\'s configuration.')
     return parser.parse_args()
 
 
 if __name__ == '__main__':
+    CLONER = None
     ARGS = get_args()
     print(ARGS)
 
@@ -77,8 +80,11 @@ if __name__ == '__main__':
         elif ARGS.help_gor:
             result = Cloner().help_gor()
         else:
-            ARGS.configuration_path
+            configuration = ClonerConfiguration(ARGS.configuration_path).load()
+            CLONER = Cloner(configuration)
+            CLONER.start()
 
+        print(result)
     except SystemExit:
         print('System exit')
         pass
@@ -87,3 +93,6 @@ if __name__ == '__main__':
         pass
     except Exception as e:
         raise e
+    finally:
+        if CLONER:
+            CLONER.stop()

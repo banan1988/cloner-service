@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import re
-from urllib.parse import urlparse
+from urlparse import urlparse
 
 __all__ = ["Validator"]
 

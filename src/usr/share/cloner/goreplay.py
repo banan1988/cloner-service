@@ -1,9 +1,8 @@
 #!/usr/bin/env python
-import json
 import os
-
 import re
 
+from env import GO_REPLAY_FULLPATH
 from validator import Validator
 
 __all__ = ["GorReplay"]
@@ -11,8 +10,8 @@ __all__ = ["GorReplay"]
 __version__ = "0.1"
 
 
-def flat_array(array: list):
-    # flat [[key, value], [key, value]]
+# flat [[key, value], [key, value]]
+def flat_array(array):
     return [item for sublist in array for item in sublist]
 
 
@@ -31,13 +30,9 @@ class RawEngine:
 
 
 class GoReplayCommand:
-    def __init__(self, configuration_file, goreplay_file="./goreplay"):
-        self.goreplay_file = goreplay_file
-        self.configuration = self._load_configuration(configuration_file)
-
-    def _load_configuration(self, configuration_file):
-        with open(configuration_file) as f:
-            return json.loads(f.read())
+    def __init__(self, configuration, goreplay_fullpath=GO_REPLAY_FULLPATH):
+        self.goreplay_fullpath = goreplay_fullpath
+        self.configuration = configuration
 
     def _input_raw(self):
         if InputType.RAW in self.configuration["input"]:
@@ -51,7 +46,7 @@ class GoReplayCommand:
         if "engine" in self.configuration["input"]:
             if RawEngine.DEFAULT == self.configuration["input"] or RawEngine.RAW_SOCKET == self.configuration["input"]:
                 return ["--input-raw-engine", self.configuration["input"]]
-        return ["--input-raw-engine", RawEngine.DEFAULT]
+        return []
 
     def _append_rate(self, host, global_rate):
         if host.get("rate", None):
@@ -62,7 +57,7 @@ class GoReplayCommand:
 
     def _output_http(self, host):
         if Validator.is_url(host["host"]):
-            return ["--output-http", self._append_rate(host, self.configuration["output"]["http"]["rate"])]
+            return ["--output-http", self._append_rate(host, self.configuration["output"]["http"].get("rate", "100%"))]
         raise GorCommandException("Output's HTTP host %s has incorrect format" % host["host"])
 
     def _output_https(self):
@@ -119,27 +114,27 @@ class GoReplayCommand:
 
     def _output_http_workers(self):
         # (Average number of requests per second)/(Average target response time per second)
-        if self.configuration["output"]["http"]["workers"] >= 1:
+        if self.configuration["output"]["http"].get("workers", 0) >= 1:
             return ["--output-http-workers", str(self.configuration["output"]["http"]["workers"])]
         return []
 
     def _exit_after(self):
-        if self.configuration["exit_after"]:
+        if self.configuration.get("exit_after", None):
             match = re.match("([0-9]+)([smh])", self.configuration["exit_after"])
             if match and int(match.group(1)) > 0:
                 return ["--exit-after", self.configuration["exit_after"]]
         return []
 
     def _extra_args(self):
-        if self.configuration["extra_args"]:
+        if self.configuration.get("extra_args", None):
             extra_args = [[key, '"%s"' % value] for key, value in self.configuration["extra_args"].items()]
             return flat_array(extra_args)
         return []
 
     def _goreplay(self):
-        if os.path.exists(self.goreplay_file):
-            return [self.goreplay_file]
-        raise GorCommandException("Not found 'goreplay' application in path: %s" % self.goreplay_file)
+        if os.path.exists(self.goreplay_fullpath):
+            return [self.goreplay_fullpath]
+        raise GorCommandException("Not found 'goreplay' application in path: %s" % self.goreplay_fullpath)
 
     def build(self):
         args = []
@@ -165,7 +160,6 @@ class GoReplayCommand:
     def build_string(self):
         return " ".join(self.build())
 
-
-if __name__ == '__main__':
-    goReplayCommand = GoReplayCommand("../../../etc/cloner/cloner.json", "../../local/bin/goreplay").build()
-    print(goReplayCommand)
+# if __name__ == '__main__':
+#     goReplayCommand = GoReplayCommand("../../../etc/cloner/cloner.json", "../../local/bin/goreplay").build()
+#     print(goReplayCommand)

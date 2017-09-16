@@ -8,12 +8,12 @@ __version__ = "0.1"
 
 __all__ = ["Command"]
 
-procs = []
+subprocesses = []
 
 
 @atexit.register
 def _kill_subprocesses():
-    for proc in procs:
+    for proc in subprocesses:
         try:
             print("Try to kill process %d." % proc.pid)
             proc.kill()
@@ -43,7 +43,7 @@ class Command:
     def execute(self):
         try:
             self._proc = Popen(self.command, stdout=PIPE, stderr=PIPE, shell=False)
-            procs.append(self._proc)
+            subprocesses.append(self._proc)
             result = self._proc.communicate()
             self.return_code = self._proc.returncode
             self.stdout = result[0]
