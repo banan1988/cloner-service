@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 import atexit
 import shlex
-
 from subprocess import Popen, PIPE
+
+import logger
 
 __version__ = "0.1"
 
 __all__ = ["Command"]
+
+LOGGER = logger.get_logger()
 
 subprocesses = []
 
@@ -15,14 +18,14 @@ subprocesses = []
 def _kill_subprocesses():
     for proc in subprocesses:
         try:
-            print("Try to kill process %d." % proc.pid)
+            LOGGER.debug("Try to kill process %d.", proc.pid)
             proc.kill()
-            print("Successfully killed process %d with exit code %d." % (proc.pid, proc.returncode))
+            LOGGER.debug("Successfully killed process %d with exit code %d", proc.pid, proc.returncode)
         except OSError as e:
             if proc.returncode >= 0:
-                print("Process %d is already killed." % proc.pid)
+                LOGGER.debug("Process %d is already killed.", proc.pid)
             else:
-                print("Couldn't kill process %d - %s" % (proc.pid, e))
+                LOGGER.exception("Couldn't kill process %d", proc.pid, e)
 
 
 class Command:
@@ -32,9 +35,10 @@ class Command:
     stderr = None
 
     def __init__(self, command):
-        print("execute", command)
+        LOGGER.debug("Execute: %s", command)
+
         if not command:
-            raise Exception("command is empty")
+            raise Exception("Command is empty !")
         if type(command) == str:
             self.command = shlex.split(command)
         else:
@@ -50,6 +54,7 @@ class Command:
             self.stderr = result[1]
             return self
         except Exception as e:
+            LOGGER.exception("Exception: %s", e)
             raise e
 
     def interrupt(self):

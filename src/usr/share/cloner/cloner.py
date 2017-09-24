@@ -2,6 +2,7 @@
 import argparse
 import threading
 
+import logger
 from command import *
 from configuration import ClonerConfiguration
 from env import CONFIGURATION_PATH
@@ -10,6 +11,8 @@ from goreplay import GoReplayCommand
 __all__ = ["Cloner"]
 
 __version__ = "0.1"
+
+LOGGER = logger.get_logger()
 
 
 class ClonerThread(threading.Thread):
@@ -23,11 +26,11 @@ class ClonerThread(threading.Thread):
 
     def run(self):
         try:
-            print("Start cloner thread")
+            LOGGER.info("Start cloner thread")
             self.command = Command(self.gor_command)
             return self.command.execute()
         finally:
-            print("Stop cloner thread")
+            LOGGER.info("Stop cloner thread")
 
     def interrupt(self):
         if self.is_alive():
@@ -74,8 +77,9 @@ def get_args():
 if __name__ == '__main__':
     CLONER = None
     ARGS = get_args()
-    print(ARGS)
+    LOGGER.debug(ARGS)
 
+    result = None
     try:
         if ARGS.version_gor:
             result = Cloner().version_gor()
@@ -86,14 +90,15 @@ if __name__ == '__main__':
             CLONER = Cloner(configuration)
             CLONER.start()
 
-        print(result)
+        LOGGER.info("Result: %s", result)
     except SystemExit:
-        print('System exit')
+        LOGGER.error("System exit")
         pass
     except KeyboardInterrupt:
-        print('Keyboard interrupt')
+        LOGGER.error("Keyboard interrupt")
         pass
     except Exception as e:
+        LOGGER.exception("Exception", e)
         raise e
     finally:
         if CLONER:

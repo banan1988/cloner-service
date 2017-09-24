@@ -4,7 +4,7 @@ import re
 
 from configuration import ClonerConfiguration
 from env import GO_REPLAY_FULLPATH
-from validator import Validator
+from validator import is_url, is_url_path, is_rewrite_path
 
 __all__ = ["GorReplay"]
 
@@ -64,7 +64,7 @@ class GoReplayCommand:
         return '"%s"' % host["host"]
 
     def _output_http(self, host):
-        if Validator.is_url(host["host"]):
+        if is_url(host["host"]):
             return ["--output-http", self._append_rate(host, self.configuration["output"]["http"].get("rate", "100%"))]
         raise GorCommandException("Output's HTTP host %s has incorrect format" % host["host"])
 
@@ -90,7 +90,7 @@ class GoReplayCommand:
             self.configuration["output"]["elasticsearch"]["index"])]
 
     def _http_allow_url(self, path):
-        if Validator.is_url_path(path):
+        if is_url_path(path):
             return ["--http-allow-url", '"%s"' % path]
         raise GorCommandException("Allow path %s has incorrect format" % path)
 
@@ -103,7 +103,7 @@ class GoReplayCommand:
         return flat_array(allow_urls)
 
     def _http_disallow_url(self, path):
-        if Validator.is_url_path(path):
+        if is_url_path(path):
             return ["--http-disallow-url", '"%s"' % path]
         raise GorCommandException("Disallow path %s has incorrect format" % path)
 
@@ -116,7 +116,7 @@ class GoReplayCommand:
         return flat_array(disallow_urls)
 
     def _http_rewrite_url(self, rewrite_path):
-        if Validator.is_rewrite_path(rewrite_path):
+        if is_rewrite_path(rewrite_path):
             return ["--http-rewrite-url", '"%s"' % rewrite_path]
         raise GorCommandException("Rewrite path %s has incorrect format. Expects ':' as a delimiter." % rewrite_path)
 
