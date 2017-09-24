@@ -15,6 +15,12 @@
         "rewrite": [
           "/a1/([a-zA-Z]+):/a2/$1"
         ]
+      },
+      "methods": {
+        "allow": [
+          "GET",
+          "POST"
+        ]
       }
     }
   },
@@ -32,16 +38,20 @@
           "host": "http://a.host.domain.com:8080"
         }
       ],
-      "rate": "100%",
-      "workers": 1
+      "rate": "33%",
+      "workers": 30,
+      "timeout": "30s"
+    },
+    "elasticsearch": {
+      "host": "aaa",
+      "index": "goreplay"
     }
   },
-  "exit_after": "30s",
   "extra_args": {
-    "--key": "value",
-    "--key2": "next_value"
+    "--http-set-header": "User-Agent: Gor"
   },
-  "debug": false,
-  "verbose": false,
-  "stats": false
+  "exit_after": "1h",
+  "debug": true,
+  "verbose": true,
+  "stats": true
 }

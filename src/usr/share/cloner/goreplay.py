@@ -2,6 +2,7 @@
 import os
 import re
 
+from configuration import ClonerConfiguration
 from env import GO_REPLAY_FULLPATH
 from validator import Validator
 
@@ -23,10 +24,16 @@ class InputType:
     RAW = "raw"
     TCP = "tcp"
 
+    def __init__(self):
+        pass
+
 
 class RawEngine:
     DEFAULT = "libpcap"
     RAW_SOCKET = "raw_socket"
+
+    def __init__(self):
+        pass
 
 
 class GoReplayCommand:
@@ -43,9 +50,10 @@ class GoReplayCommand:
         return []
 
     def _input_raw_engine(self):
-        if "engine" in self.configuration["input"]:
-            if RawEngine.DEFAULT == self.configuration["input"] or RawEngine.RAW_SOCKET == self.configuration["input"]:
-                return ["--input-raw-engine", self.configuration["input"]]
+        raw_engines = [RawEngine.DEFAULT, RawEngine.RAW_SOCKET]
+        if "engine" in self.configuration["input"][InputType.RAW]:
+            if self.configuration["input"][InputType.RAW]["engine"] in raw_engines:
+                return ["--input-raw-engine", self.configuration["input"][InputType.RAW]["engine"]]
         return []
 
     def _append_rate(self, host, global_rate):
@@ -72,6 +80,14 @@ class GoReplayCommand:
         for target_host in target_hosts:
             output_https += self._output_http(target_host)
         return output_https
+
+    def _output_elasticsearch(self):
+        if self.configuration["output"]["elasticsearch"]:
+            []
+
+        return ["--output-http-elasticsearch", '"%s/%s"' % (
+            self.configuration["output"]["elasticsearch"]["host"],
+            self.configuration["output"]["elasticsearch"]["index"])]
 
     def _http_allow_url(self, path):
         if Validator.is_url_path(path):
@@ -112,15 +128,36 @@ class GoReplayCommand:
                         self.configuration["input"][InputType.RAW]["paths"]["rewrite"]]
         return flat_array(rewrite_urls)
 
+    def _http_allow_method(self, method):
+        allowed_methods = ["GET", "POST", "PUT", "DELETE"]
+        if method in allowed_methods:
+            return ["-http-allow-method", method]
+        raise GorCommandException("Allow method %s should be one of: %s." % (method, allowed_methods))
+
+    def _http_allow_methods(self):
+        if not self.configuration["input"][InputType.RAW]["methods"]["allow"]:
+            return []
+
+        allowed_methods = [self._http_allow_method(method) for method in
+                           self.configuration["input"][InputType.RAW]["methods"]["allow"]]
+        return flat_array(allowed_methods)
+
     def _output_http_workers(self):
         # (Average number of requests per second)/(Average target response time per second)
         if self.configuration["output"]["http"].get("workers", 0) >= 1:
             return ["--output-http-workers", str(self.configuration["output"]["http"]["workers"])]
         return []
 
+    def _output_http_timeout(self):
+        if self.configuration["output"]["http"].get("timeout", "5s"):
+            match = re.match("([0-9]+)(s|m|h)", self.configuration["output"]["http"]["timeout"])
+            if match and int(match.group(1)) > 0:
+                return ["--output-http-timeout", self.configuration["output"]["http"]["timeout"]]
+        return []
+
     def _exit_after(self):
         if self.configuration.get("exit_after", None):
-            match = re.match("([0-9]+)([smh])", self.configuration["exit_after"])
+            match = re.match("([0-9]+)(s|m|h)", self.configuration["exit_after"])
             if match and int(match.group(1)) > 0:
                 return ["--exit-after", self.configuration["exit_after"]]
         return []
@@ -129,6 +166,21 @@ class GoReplayCommand:
         if self.configuration.get("extra_args", None):
             extra_args = [[key, '"%s"' % value] for key, value in self.configuration["extra_args"].items()]
             return flat_array(extra_args)
+        return []
+
+    def _debug(self):
+        if self.configuration.get("debug", False):
+            return ["--debug"]
+        return []
+
+    def _stats(self):
+        if self.configuration.get("stats", False):
+            return ["--stats"]
+        return []
+
+    def _verbose(self):
+        if self.configuration.get("verbose", False):
+            return ["--verbose"]
         return []
 
     def _goreplay(self):
@@ -149,17 +201,29 @@ class GoReplayCommand:
             args += self._http_disallow_urls()
             args += self._http_rewrite_urls()
 
+            args += self._http_allow_methods();
+
             args += self._output_https()
             args += self._output_http_workers()
+            args += self._output_http_timeout()
+
+            args += self._output_elasticsearch()
+
+            args += self._extra_args()
 
             args += self._exit_after()
-            args += self._extra_args()
+
+            args += self._debug()
+            args += self._verbose()
+            args += self._stats()
 
         return args
 
     def build_string(self):
         return " ".join(self.build())
 
-# if __name__ == '__main__':
-#     goReplayCommand = GoReplayCommand("../../../etc/cloner/cloner.json", "../../local/bin/goreplay").build()
-#     print(goReplayCommand)
+
+if __name__ == '__main__':
+    configuration = ClonerConfiguration("../../../etc/cloner").load()
+    goReplayCommand = GoReplayCommand(configuration, "../../local/bin/goreplay").build_string()
+    print(goReplayCommand)

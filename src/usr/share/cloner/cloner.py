@@ -13,16 +13,18 @@ __version__ = "0.1"
 
 
 class ClonerThread(threading.Thread):
-    def __init__(self, command):
+    command = None
+
+    def __init__(self, gor_command):
         threading.Thread.__init__(self)
         self.setName("ClonerThread")
         self.setDaemon(True)
-        self.command = command
+        self.gor_command = gor_command
 
     def run(self):
         try:
             print("Start cloner thread")
-            self.command = Command(self.command)
+            self.command = Command(self.gor_command)
             return self.command.execute()
         finally:
             print("Stop cloner thread")
