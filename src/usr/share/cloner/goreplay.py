@@ -6,10 +6,6 @@ from configuration import ClonerConfiguration
 from env import GO_REPLAY_FULLPATH
 from validator import is_url, is_url_path, is_rewrite_path
 
-__all__ = ["GorReplay"]
-
-__version__ = "0.1"
-
 
 # flat [[key, value], [key, value]]
 def flat_array(array):
@@ -38,8 +34,8 @@ class RawEngine:
 
 class GoReplayCommand:
     def __init__(self, configuration, goreplay_fullpath=GO_REPLAY_FULLPATH):
-        self.goreplay_fullpath = goreplay_fullpath
         self.configuration = configuration
+        self.goreplay_fullpath = goreplay_fullpath
 
     def _input_raw(self):
         if InputType.RAW in self.configuration["input"]:

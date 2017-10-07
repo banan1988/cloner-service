@@ -1,10 +1,6 @@
 #!/usr/bin/env python
-import re             
+import re
 from urlparse import urlparse
-
-__all__ = ["Validator"]
-
-__version__ = "0.1"
 
 
 def is_hostname(hostname):

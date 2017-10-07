@@ -6,7 +6,7 @@ LOG_stdout="/var/log/$NAME/$NAME.log"
 LOG_stderr="/var/log/$NAME/$NAME.err"
 
 CMD="python /usr/share/cloner/cloner-service.py"
-CMD_ARGS="--config /etc/cloner/config.json"
+CMD_ARGS="--configuration-path /etc/cloner"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'

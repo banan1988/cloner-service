@@ -5,10 +5,6 @@ from subprocess import Popen, PIPE
 
 import logger
 
-__version__ = "0.1"
-
-__all__ = ["Command"]
-
 LOGGER = logger.get_logger()
 
 subprocesses = []
@@ -16,26 +12,26 @@ subprocesses = []
 
 @atexit.register
 def _kill_subprocesses():
-    for proc in subprocesses:
+    for process in subprocesses:
         try:
-            LOGGER.debug("Try to kill process %d.", proc.pid)
-            proc.kill()
-            LOGGER.debug("Successfully killed process %d with exit code %d", proc.pid, proc.returncode)
+            LOGGER.debug("Try to kill process %d.", process.pid)
+            process.kill()
+            LOGGER.debug("Successfully killed process %d with exit code %d.", process.pid, process.returncode)
         except OSError as e:
-            if proc.returncode >= 0:
-                LOGGER.debug("Process %d is already killed.", proc.pid)
+            if process.returncode >= 0:
+                LOGGER.debug("Process %d is already killed.", process.pid)
             else:
-                LOGGER.exception("Couldn't kill process %d", proc.pid, e)
+                LOGGER.exception("Couldn't kill process %d: %s.", process.pid, e)
 
 
 class Command:
-    _proc = None
+    _process = None
     return_code = 0
     stdout = None
     stderr = None
 
     def __init__(self, command):
-        LOGGER.debug("Execute: %s", command)
+        LOGGER.debug("Execute: %s.", command)
 
         if not command:
             raise Exception("Command is empty !")
@@ -46,16 +42,16 @@ class Command:
 
     def execute(self):
         try:
-            self._proc = Popen(self.command, stdout=PIPE, stderr=PIPE, shell=False)
-            subprocesses.append(self._proc)
-            result = self._proc.communicate()
-            self.return_code = self._proc.returncode
+            self._process = Popen(self.command, stdout=PIPE, stderr=PIPE, shell=False)
+            subprocesses.append(self._process)
+            result = self._process.communicate()
+            self.return_code = self._process.returncode
             self.stdout = result[0]
             self.stderr = result[1]
             return self
         except Exception as e:
-            LOGGER.exception("Exception: %s", e)
+            LOGGER.exception("Exception: %s.", e)
             raise e
 
     def interrupt(self):
-        self._proc.kill()
+        self._process.kill()
