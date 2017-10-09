@@ -156,21 +156,19 @@ def hostname():
 
 def register():
     # r = requests.get('http://127.0.0.1:8080')
-    # r.status_code
     # LOGGER.debug(r)
     pass
 
 
 def check_configuration():
     LOGGER.info("Check configuration for %s." % hostname())
-    register()
 
 
 if __name__ == '__main__':
     CONFIGURATION_TIMER = None
     SERVER = None
     try:
-        CONFIGURATION_TIMER = Timer(2.0, check_configuration)
+        CONFIGURATION_TIMER = Timer(10.0, check_configuration)
         CONFIGURATION_TIMER.setName("Configuration")
         CONFIGURATION_TIMER.setDaemon(True)
         CONFIGURATION_TIMER.start()

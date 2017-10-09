@@ -52,4 +52,5 @@ buildRpm {
     arch = NOARCH
     requires('python', '2.7', GREATER | EQUAL)
     requires('python-pip')
+    requires('python-virtualenv')
 }
