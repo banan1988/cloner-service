@@ -1,18 +1,20 @@
 #!/usr/bin/env python
-import threading
+import socket
 from BaseHTTPServer import HTTPServer
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 from SocketServer import ThreadingMixIn
 from string import Template
+from threading import Thread, Timer
 
 import logger
 
-LOGGER = logger.get_logger()
+LOGGER = logger.get_logger('cloner_service')
+ACCESS_LOG_LOGGER = logger.get_logger('access_log')
 
 
 class DefaultHTTPRequestHandler(SimpleHTTPRequestHandler):
     def log_request(self, code='-', size='-'):
-        LOGGER.info(
+        ACCESS_LOG_LOGGER.info(
             "%s %s %s %s %s",
             self.address_string(),
             self.log_date_time_string(),
@@ -61,6 +63,55 @@ class DefaultHTTPRequestHandler(SimpleHTTPRequestHandler):
             raise Exception("Couldn't get content based on file: %s" % filename, e)
 
 
+class HTTPRequestHandler(DefaultHTTPRequestHandler):
+    """python 2"""
+
+    def do_GET(self):
+        try:
+            if self.path == "/":
+                self.send_response(200)
+                self.send_headers({"Content-type": "text/html; charset=utf-8"})
+
+                content = self.get_content_from_template("index.html", dict(message="Hello"))
+
+                self.send_content(content)
+                return
+
+            if self.path == "/content/text":
+                self.send_response(200)
+                self.send_headers({"Content-type": "text/plain; charset=utf-8"})
+
+                content = self.get_content_from_file("responses/content.txt")
+
+                self.send_content(content)
+                return
+
+            if self.path == "/content/html":
+                self.send_response(499)
+                self.send_headers({"Content-type": "text/html; charset=utf-8"})
+
+                content = self.get_content_from_file("responses/content.html")
+
+                self.send_content(content)
+                return
+
+            if self.path == "/content/json":
+                self.send_response(200)
+                self.send_headers({"Content-type": "application/json; charset=utf-8"})
+
+                content = self.get_content_from_file("responses/content.json")
+
+                self.send_content(content)
+                return
+
+        except Exception as e:
+            self.send_error_500(e)
+            return
+
+        self.send_error_404()
+        return
+
+
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
     allow_reuse_address = True
 
@@ -78,7 +129,8 @@ class SimpleHttpServer:
 
     def start(self):
         try:
-            self.server_thread = threading.Thread(target=self.server.serve_forever)
+            self.server_thread = Thread(target=self.server.serve_forever)
+            self.server_thread.name = "HTTPServerThread"
             self.server_thread.daemon = True
             self.server_thread.start()
             LOGGER.info("HTTP server has started listening on %s." % str(self.server.server_address))
@@ -98,9 +150,31 @@ class SimpleHttpServer:
             LOGGER.info("Couldn't stop HTTP server because of server in None.")
 
 
+def hostname():
+    return socket.getfqdn()
+
+
+def register():
+    # r = requests.get('http://127.0.0.1:8080')
+    # r.status_code
+    # LOGGER.debug(r)
+    pass
+
+
+def check_configuration():
+    LOGGER.info("Check configuration for %s." % hostname())
+    register()
+
+
 if __name__ == '__main__':
+    CONFIGURATION_TIMER = None
     SERVER = None
     try:
+        CONFIGURATION_TIMER = Timer(2.0, check_configuration)
+        CONFIGURATION_TIMER.setName("Configuration")
+        CONFIGURATION_TIMER.setDaemon(True)
+        CONFIGURATION_TIMER.start()
+
         SERVER = SimpleHttpServer('127.0.0.1', 8080, DefaultHTTPRequestHandler)
         SERVER.start()
     except SystemExit:
@@ -115,3 +189,5 @@ if __name__ == '__main__':
     finally:
         if SERVER:
             SERVER.stop()
+        if CONFIGURATION_TIMER:
+            CONFIGURATION_TIMER.cancel()
