@@ -101,7 +101,8 @@ class Command:
 
                 if self.fast_fail:
                     LOGGER.info("Fast fail !")
-                    break
+                    self.exit_code = 1
+                    return self
 
             if (stdout == '' or stderr == '') and self._process.poll() is not None:
                 break
