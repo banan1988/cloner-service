@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "disable_existing_loggers": false,
+  "formatters": {
+    "simple": {
+      "format": "%(asctime)s %(levelname)s %(process)s --- [%(threadName)s] %(filename)s.%(name)s.%(funcName)s():%(lineno)d - %(message)s"
+    },
+    "access_log": {
+      "format": "%(message)s"
+    }
+  },
+  "handlers": {
+    "console": {
+      "class": "logging.StreamHandler",
+      "level": "DEBUG",
+      "formatter": "simple",
+      "stream": "ext://sys.stdout"
+    },
+    "cloner_file_handler": {
+      "class": "logging.handlers.TimedRotatingFileHandler",
+      "level": "DEBUG",
+      "formatter": "simple",
+      "filename": "cloner.log",
+      "backupCount": 30,
+      "encoding": "utf8"
+    },
+    "cloner_service_file_handler": {
+      "class": "logging.handlers.TimedRotatingFileHandler",
+      "level": "DEBUG",
+      "formatter": "simple",
+      "filename": "cloner-service.log",
+      "backupCount": 30,
+      "encoding": "utf8"
+    },
+    "access_log_file_handler": {
+      "class": "logging.handlers.TimedRotatingFileHandler",
+      "level": "DEBUG",
+      "formatter": "access_log",
+      "filename": "access-log.log",
+      "backupCount": 30,
+      "encoding": "utf8"
+    }
+  },
+  "loggers": {
+    "cloner": {
+      "level": "DEBUG",
+      "handlers": [
+        "cloner_file_handler"
+      ],
+      "propagate": "no"
+    },
+    "cloner_service": {
+      "level": "DEBUG",
+      "handlers": [
+        "cloner_service_file_handler"
+      ],
+      "propagate": "no"
+    },
+    "access_log": {
+      "level": "DEBUG",
+      "handlers": [
+        "access_log_file_handler"
+      ],
+      "propagate": "no"
+    }
+  },
+  "root": {
+    "level": "DEBUG",
+    "handlers": [
+      "console"
+    ]
+  }
+}

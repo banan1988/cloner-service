@@ -1,0 +1,57 @@
+{
+  "input": {
+    "raw": {
+      "engine": "libpcap",
+      "port": 8080,
+      "paths": {
+        "allow": [
+          "/a1",
+          "/a2"
+        ],
+        "disallow": [
+          "/b1",
+          "/b2"
+        ],
+        "rewrite": [
+          "/a1/([a-zA-Z]+):/a2/$1"
+        ]
+      },
+      "methods": {
+        "allow": [
+          "GET",
+          "POST"
+        ]
+      }
+    }
+  },
+  "output": {
+    "http": {
+      "hosts": [
+        {
+          "host": "http://a.host.domain.com:8080",
+          "rate": "66%"
+        },
+        {
+          "host": "http://a.host.domain.com:8080"
+        },
+        {
+          "host": "http://a.host.domain.com:8080"
+        }
+      ],
+      "rate": "33%",
+      "workers": 30,
+      "timeout": "30s"
+    },
+    "elasticsearch": {
+      "host": "aaa",
+      "index": "goreplay"
+    }
+  },
+  "extra_args": {
+    "--http-set-header": "User-Agent: Gor"
+  },
+  "exit_after": "1h",
+  "debug": true,
+  "verbose": true,
+  "stats": true
+}

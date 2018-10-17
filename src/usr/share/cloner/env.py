@@ -8,7 +8,8 @@ LOGGER = logger.get_logger()
 BASEDIR = os.path.dirname(os.path.realpath(__file__))
 LOGGER.debug("BASEDIR: %s" % BASEDIR)
 
-GO_REPLAY_PATH = os.getenv("GO_REPLAY_PATH", "/usr/local/bin")
+# GO_REPLAY_PATH = os.getenv("GO_REPLAY_PATH", "/usr/local/bin")
+GO_REPLAY_PATH = os.getenv("GO_REPLAY_PATH", "../../local/bin")
 GO_REPLAY_FILENAME = "goreplay"
 GO_REPLAY_FULLPATH = os.path.join(GO_REPLAY_PATH, GO_REPLAY_FILENAME)
 

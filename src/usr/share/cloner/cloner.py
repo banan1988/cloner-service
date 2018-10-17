@@ -21,12 +21,9 @@ class ClonerThread(threading.Thread):
         self.gor_command = gor_command
 
     def run(self):
-        try:
-            LOGGER.debug("Start ClonerThread.")
-            self.command = Command(self.gor_command)
-            return self.command.execute()
-        finally:
-            LOGGER.debug("Stop ClonerThread.")
+        LOGGER.debug("Start ClonerThread.")
+        self.command = Command(self.gor_command)
+        return self.command.execute()
 
     def interrupt(self):
         if self.is_alive():
@@ -39,18 +36,16 @@ class ClonerThread(threading.Thread):
 class Cloner:
     thread = None
 
-    def __init__(self, configuration):
-        self.gor_command = GoReplayCommand(configuration).build()
+    def __init__(self, configuration, goreplay_fullpath):
+        self.gor_command = GoReplayCommand(configuration, goreplay_fullpath).build()
         LOGGER.debug("GorReplayCommand: %s." % self.gor_command)
 
     def start(self):
         self.thread = ClonerThread(self.gor_command)
-        self.thread.start()
+        result = self.thread.start()
         LOGGER.info("Cloner has started.")
         self.wait_for_thread()
-
-    def wait_for_thread(self):
-        self.thread.join()
+        return result
 
     def stop(self):
         if self.thread:
@@ -59,6 +54,9 @@ class Cloner:
             LOGGER.info("Cloner has stopped.")
         else:
             LOGGER.info("Couldn't stop Cloner because of ClonerThread in None.")
+
+    def wait_for_thread(self):
+        self.thread.join()
 
     def version_gor(self):
         result = Command(self.gor_command).execute()
@@ -95,7 +93,7 @@ if __name__ == '__main__':
             result = Cloner().help_gor()
         else:
             configuration = ClonerConfiguration(ARGS.configuration_path).load()
-            CLONER = Cloner(configuration)
+            CLONER = Cloner(configuration, "/home/banan/goreplay")
             CLONER.start()
 
         LOGGER.info("Result: %s.", result)

@@ -1,0 +1,26 @@
+{
+  "input": {
+    "raw": {
+      "port": 8080,
+      "paths": {
+        "allow": [
+          "/a1"
+        ],
+        "disallow": [
+        ],
+        "rewrite": [
+        ]
+      }
+    }
+  },
+  "output": {
+    "http": {
+      "hosts": [
+        {
+          "host": "http://a.host.domain.com:8080"
+        }
+      ],
+      "timeout": "30s"
+    }
+  }
+}

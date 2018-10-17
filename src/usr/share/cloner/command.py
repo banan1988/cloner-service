@@ -7,12 +7,12 @@ import logger
 
 LOGGER = logger.get_logger()
 
-subprocesses = []
+_processes = []
 
 
 @atexit.register
-def _kill_subprocesses():
-    for process in subprocesses:
+def _kill_processes():
+    for process in _processes:
         try:
             LOGGER.debug("Try to kill process %d.", process.pid)
             process.kill()
@@ -43,7 +43,7 @@ class Command:
     def execute(self):
         try:
             self._process = Popen(self.command, stdout=PIPE, stderr=PIPE, shell=False)
-            subprocesses.append(self._process)
+            _processes.append(self._process)
             result = self._process.communicate()
             self.return_code = self._process.returncode
             self.stdout = result[0]

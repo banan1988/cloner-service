@@ -15,6 +15,7 @@ class ClonerConfiguration:
         LOGGER.debug("ClonerConfiguration: %s.", self.configuration_file)
 
     def load(self):
+        # type: () -> object
         with open(self.configuration_file) as f:
             return json.loads(f.read())
 
@@ -28,5 +29,6 @@ class ClonerServiceConfiguration:
         LOGGER.debug("ClonerServiceConfiguration: %s.", self.configuration_file)
 
     def load(self):
+        # type: () -> object
         with open(self.configuration_file) as f:
             return json.loads(f.read())
